@@ -3,12 +3,12 @@ package main
 // $ go get -u github.com/go-chi/chi/v5
 // $ go get github.com/jackc/pgx/v4
 // $ go get github.com/jackc/pgconn
-
+// $ go get github.com/golang-jwt/jwt/v4
 import (
 	"backend/internal/repository"
 	"backend/internal/repository/dbrepo"
+	"time"
 
-	
 	"flag"
 	"fmt"
 	"log"
@@ -22,6 +22,11 @@ type application struct {
 	DSN string
 	Domain string
 	DB repository.DatabaseRepo
+	auth Auth
+	JWTSecret string
+	JWTIssuer string
+	JWTAudience string
+	CookieDomain string
 }
 
 
@@ -32,7 +37,12 @@ func main() {
 
 	// read from command line 
 	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5432 user=postgres password=postgres dbname=movies sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
-	
+	flag.StringVar(&app.JWTSecret, "jwt-secret", "verysecret", "signing secret")
+	flag.StringVar(&app.JWTIssuer, "jwt-issuer", "example.com", "signing issuer")
+	flag.StringVar(&app.JWTAudience, "jwt-audience", "example.com", "signing audience")
+	flag.StringVar(&app.CookieDomain, "cookie-domain", "localhost", "cookie domain")
+	flag.StringVar(&app.Domain, "domain", "example.com", "domain")
+
 	flag.Parse()
 
 	
@@ -45,7 +55,23 @@ func main() {
 	}
 	app.DB = &dbrepo.PostgresDBRepo{DB: conn}
 	defer app.DB.Connection().Close()
-	app.Domain = "example.com"
+
+	app.auth = Auth{
+		Issuer: app.JWTIssuer,
+		Audience: app.JWTAudience,
+		Secret: app.JWTSecret,
+		TokenExpiry: time.Minute & 15,
+		RefreshExpiry: time.Hour * 24,
+		CookiePath: "/",
+		CookieName: "__HOST-refresh_Token",
+		CookieDomain: app.CookieDomain,
+	}
+
+
+
+
+
+	// app.Domain = "example.com"
 	log.Println("Starting application on port ", PORT)
 
 
