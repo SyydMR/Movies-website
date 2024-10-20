@@ -6,13 +6,13 @@ const Movies = () => {
 
     useEffect( () => {
         const headers = new Headers();
-        headers.append("Content-Type", "application/json")
-
+        headers.append("Content-Type", "application/json");
 
         const requestOptions = {
-            method: "Get",
-            header: headers,
+            method: "GET",
+            headers: headers,
         }
+
         fetch(`http://localhost:8080/movies`, requestOptions)
             .then((response) => response.json())
             .then((data) => {
@@ -21,6 +21,7 @@ const Movies = () => {
             .catch(err => {
                 console.log(err);
             })
+
     }, []);
 
     return(
